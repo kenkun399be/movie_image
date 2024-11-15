@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>指定した秒数の画像を保存できる</title>
+</head>
+<body>
+  <h1>指定した秒数の画像を保存できる </h1>
+  <input type="file" id="videoInput" accept="video/*">
+  <button id="extractButton">抽出開始</button>
+  <div id="output">
+    <div id="progressBar">
+      <div id="progressBarFill"></div>
+      <span id="progressPercentage"></span>
+      <span id="remainingTime"></span>
+    </div>
+    <span id="videoDuration"></span>
+    <input type="number" id="targetTime" min="0" placeholder="時間(秒)">
+    <button id="showFrameButton">画像を表示</button>
+    <img id="frameImage" src="" alt="画像" width="640" height="360"> 
+  </div>
+
+  <script>
+    const videoInput = document.getElementById('videoInput');
+    const extractButton = document.getElementById('extractButton');
+    const progressBar = document.getElementById('progressBar');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressPercentage = document.getElementById('progressPercentage');
+    const remainingTime = document.getElementById('remainingTime');
+    const videoDuration = document.getElementById('videoDuration');
+    const targetTimeInput = document.getElementById('targetTime');
+    const showFrameButton = document.getElementById('showFrameButton');
+    const frameImage = document.getElementById('frameImage');
+    const output = document.getElementById('output');
+
+    let video = null;
+    let framerate = null;
+    let canvas = null;
+    let context = null;
+
+    extractButton.addEventListener('click', () => {
+      const file = videoInput.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+          const videoBlob = new Blob([event.target.result], { type: file.type });
+          const videoURL = URL.createObjectURL(videoBlob);
+
+          video = document.createElement('video');
+          video.src = videoURL;
+          video.style.display = 'none';
+          document.body.appendChild(video);
+
+          video.onloadedmetadata = () => {
+            framerate = video.framerate;
+            canvas = document.createElement('canvas');
+            context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const totalFrames = Math.round(video.duration * framerate);
+            let currentFrame = 0;
+
+            videoDuration.textContent = `動画時間: ${formatTime(video.duration * 1000)}`;
+
+            showFrameButton.addEventListener('click', showFrame);
+          };
+        };
+
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert('動画ファイルを選択してください。');
+      }
+    });
+
+    function showFrame() {
+      const targetTime = parseFloat(targetTimeInput.value);
+
+      if (isNaN(targetTime) || targetTime < 0 || targetTime > video.duration) {
+        alert('有効な時間を指定してください。');
+        return;
+      }
+
+      video.currentTime = targetTime;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      frameImage.src = canvas.toDataURL('image/png');
+    }
+
+    function formatTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+  </script>
+</body>
+</html>
