@@ -65,6 +65,20 @@
             videoDuration.textContent = `動画時間: ${formatTime(video.duration * 1000)}`;
 
             showFrameButton.addEventListener('click', showFrame);
+
+            // アップロード開始
+            video.addEventListener('progress', (event) => {
+              const loaded = event.loaded;
+              const total = event.total;
+              const percentage = Math.round((loaded / total) * 100);
+              progressPercentage.textContent = `${percentage}%`;
+              progressBarFill.style.width = `${percentage}%`;
+            });
+
+            video.addEventListener('timeupdate', () => {
+              const remainingTimeSeconds = Math.round(video.duration - video.currentTime);
+              remainingTime.textContent = `残り時間: ${formatTime(remainingTimeSeconds * 1000)}`;
+            });
           };
         };
 
